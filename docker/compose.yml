@@ -1,0 +1,64 @@
+# Docker Compose for Visual Search Ranking
+# Usage: docker-compose -f docker/compose.yml up
+
+version: '3.8'
+
+services:
+  # Main application
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: visual-search-app
+    ports:
+      - "8000:8000"   # Backend API
+      - "8001:8001"   # Static files
+    environment:
+      - VECTOR_DB_TYPE=${VECTOR_DB_TYPE:-pinecone}
+      - PINECONE_API_KEY=${PINECONE_API_KEY:-}
+      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT:-us-east-1}
+      - PINECONE_PRODUCTS_INDEX=${PINECONE_PRODUCTS_INDEX:-visual-search-products}
+    volumes:
+      - ../data:/app/data:ro
+      - ../images:/app/images:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - visual-search-network
+
+  # Weaviate for local development (optional)
+  weaviate:
+    image: semitechnologies/weaviate:1.24.1
+    container_name: visual-search-weaviate
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      CLUSTER_HOSTNAME: 'node1'
+      LIMIT_RESOURCES: 'false'
+      ENABLE_MODULES: ''
+      AUTO_SCHEMA_ENABLED: 'true'
+      ORIGIN: '*'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+    networks:
+      - visual-search-network
+    profiles:
+      - local  # Only starts with: docker-compose --profile local up
+
+volumes:
+  weaviate_data:
+    driver: local
+
+networks:
+  visual-search-network:
+    driver: bridge

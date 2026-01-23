@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Axonity AI Demo</title>
+    <style>
+        body {
+            background-color: #080B27;
+            color: #E5E7FA;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .button {
+            background-color: #FFAE00;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .product,
+        .random-product {
+            border: 1px solid #1D32BF;
+            padding: 10px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .product img,
+        .random-product img {
+            margin-right: 15px;
+        }
+
+        .product img {
+            width: 100px;
+        }
+
+        .selected-product {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #1D32BF;
+            display: flex;
+            align-items: center;
+        }
+
+        .selected-product img {
+            width: 150px;
+            margin-right: 15px;
+        }
+
+        .random-product {
+            display: inline-block;
+            width: 120px;
+            /* Adjust size as needed */
+            text-align: center;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .random-product img {
+            width: 100px;
+            /* Adjust to control image size */
+            height: 100px;
+            /* Keep it uniform */
+            object-fit: cover;
+            /* Prevent distortion */
+            border-radius: 8px;
+            /* Optional: for rounded corners */
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+            /* Optional: subtle shadow */
+        }
+
+        .random-product div {
+            font-size: 12px;
+            margin-top: 5px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Axonity AI Demo</h1>
+
+        <h2>Product Page Recommendations</h2>
+        <div>
+            <label for="productId">Enter Product ID:</label>
+            <input type="text" id="productId" placeholder="e.g., abstract_c90b7a03">
+            <label for="topK">K:</label>
+            <input type="number" id="topK" value="5" min="1" style="width:50px;">
+            <button class="button" onclick="getSimilar()">Get Similar Products</button>
+        </div>
+        <div id="selectedProduct"></div>
+        <div id="results"></div>
+
+        <h2>Dynamic Ordering Recommendations</h2>
+        <div>
+            <label for="viewed">Enter Comma-Separated Viewed Product IDs:</label>
+            <input type="text" id="viewed" placeholder="e.g., abstract_c90b7a03,landscape_abcd1234">
+            <label for="topKRec">K:</label>
+            <input type="number" id="topKRec" value="5" min="1" style="width:50px;">
+            <button class="button" onclick="getRecommendations()">Get Dynamic Recommendations</button>
+        </div>
+        <div id="recommendations"></div>
+
+        <h2>Random Products</h2>
+        <button class="button" onclick="loadRandomProducts()">Show Random Products</button>
+        <div id="randomProducts"></div>
+    </div>
+
+    <script>
+        const baseImageUrl = 'http://localhost:8001/images/';
+
+        async function getSimilar() {
+            const productId = document.getElementById("productId").value;
+            const topK = document.getElementById("topK").value;
+            const parts = productId.split('_');
+            if (parts.length < 2) { alert("Invalid Product ID format."); return; }
+            const category = parts[0];
+            const filename = parts.slice(1).join('_') + '.jpg';
+            const imageUrl = baseImageUrl + category + '/' + filename;
+            document.getElementById("selectedProduct").innerHTML = `
+        <h3>Selected Product:</h3>
+        <div class="selected-product">
+          <img src="${imageUrl}" alt="${productId}">
+          <div><strong>ID:</strong> ${productId}</div>
+        </div>`;
+            const response = await fetch(`http://localhost:8000/similar/${productId}?top_k=${topK}`);
+            const data = await response.json();
+            let html = '<h3>Similar Products:</h3>';
+            data.forEach(item => {
+                const parts = item[0].split('_');
+                const cat = parts[0];
+                const fname = parts.slice(1).join('_') + '.jpg';
+                const imgUrl = baseImageUrl + cat + '/' + fname;
+                html += `<div class="product">
+                   <img src="${imgUrl}" alt="${item[0]}">
+                   <div><strong>ID:</strong> ${item[0]}<br><strong>Score:</strong> ${item[1].toFixed(2)}</div>
+                 </div>`;
+            });
+            document.getElementById("results").innerHTML = html;
+        }
+
+        async function getRecommendations() {
+            const viewed = document.getElementById("viewed").value;
+            const topKRec = document.getElementById("topKRec").value;
+            const response = await fetch(`http://localhost:8000/recommend?viewed=${viewed}&top_k=${topKRec}`);
+            const data = await response.json();
+            let html = '<h3>Dynamic Recommendations:</h3>';
+            data.forEach(item => {
+                const parts = item[0].split('_');
+                const cat = parts[0];
+                const fname = parts.slice(1).join('_') + '.jpg';
+                const imgUrl = baseImageUrl + cat + '/' + fname;
+                html += `<div class="product">
+                   <img src="${imgUrl}" alt="${item[0]}">
+                   <div><strong>ID:</strong> ${item[0]}<br><strong>Score:</strong> ${item[1].toFixed(2)}</div>
+                 </div>`;
+            });
+            document.getElementById("recommendations").innerHTML = html;
+        }
+
+        async function loadRandomProducts() {
+            try {
+                const response = await fetch('http://localhost:8000/random_products');
+                const randomProductIds = await response.json();
+
+                let html = '<h3>Random Products:</h3>';
+                randomProductIds.forEach(productId => {
+                    const parts = productId.split('_');
+                    const cat = parts[0];
+                    const fname = parts.slice(1).join('_') + '.jpg';
+                    const imgUrl = baseImageUrl + cat + '/' + fname;
+
+                    html += `<div class="random-product" onclick="selectRandomProduct('${productId}')">
+                        <img src="${imgUrl}" alt="${productId}">
+                        <div>${productId}</div>
+                    </div>`;
+                });
+
+                document.getElementById("randomProducts").innerHTML = html;
+            } catch (error) {
+                console.error("Error fetching random products:", error);
+            }
+        }
+
+        function selectRandomProduct(productId) {
+            document.getElementById("productId").value = productId;
+            getSimilar();
+        }
+    </script>
+</body>
+
+</html>
