@@ -4,7 +4,7 @@
 # ============================================================================
 # Stage 1: Build stage
 # ============================================================================
-FROM python:3.9-slim as builder
+FROM python:3.9-slim AS builder
 
 WORKDIR /app
 
@@ -27,9 +27,9 @@ WORKDIR /app
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
-# Install runtime dependencies
+# Install runtime dependencies (libgl1 replaces deprecated libgl1-mesa-glx)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
