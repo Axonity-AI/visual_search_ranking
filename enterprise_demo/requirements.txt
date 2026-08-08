@@ -36,7 +36,7 @@ opencv-python==4.8.1.78
 
 # Development Tools
 pytest==7.4.3
-pytest-asyncio==0.21.1
+pytest-asyncio==1.4.0
 black==23.12.0
 flake8==6.1.0
 
