@@ -17,7 +17,8 @@ from tqdm import tqdm
 
 def get_project_root() -> Path:
     """Get the project root directory."""
-    return Path(__file__).parent.parent.parent.parent.parent
+    # src/visual_search_ranking/mvp/convert_to_json.py -> 4 parents to repo root
+    return Path(__file__).parent.parent.parent.parent
 
 
 def generate_embeddings(
