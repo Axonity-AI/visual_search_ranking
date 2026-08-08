@@ -1,0 +1,30 @@
+# Setup (run once per clone): ./scripts/setup.sh
+# (or manually: pip install pre-commit && pre-commit install && pre-commit install --hook-type commit-msg)
+#
+# Lint/format hooks (ruff) are deliberately not included yet — this repo
+# currently uses flake8+black+isort (CI-only, no local hook). Migrating to
+# ruff is a separate, deferred decision (see ENGINEERING_STANDARDS.md), not
+# something to bundle in here. This config covers what's uncontroversial:
+# secret scanning and basic hygiene.
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: detect-private-key
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
