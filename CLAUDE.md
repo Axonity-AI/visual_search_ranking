@@ -68,7 +68,7 @@ visual_search_ranking/
 ├── images/                        # 14 art category folders
 ├── logs/                          # Server logs (generated)
 ├── requirements.txt               # Python dependencies
-├── LICENSE                        # MIT license
+├── LICENSE                        # Proprietary license (Axonity Solutions Inc.)
 ├── .gitignore                     # Git ignore rules
 ├── .env.example                   # Environment template
 ├── README.md                      # Project overview

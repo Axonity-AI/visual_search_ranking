@@ -105,7 +105,7 @@ visual_search_ranking/
 ├── data/                          # Data files (gitignored)
 ├── images/                        # Artwork images
 ├── requirements.txt               # Python dependencies
-├── LICENSE                        # MIT license
+├── LICENSE                        # Proprietary license (Axonity Solutions Inc.)
 └── README.md                      # This file
 ```
 
@@ -165,4 +165,4 @@ docker-compose -f docker/compose.yml --profile local up
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+Proprietary - Copyright (c) 2026 Axonity Solutions Inc. See [LICENSE](LICENSE) file.
