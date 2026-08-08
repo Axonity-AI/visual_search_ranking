@@ -40,7 +40,7 @@ pytest-asyncio==0.21.1
 pytest-cov>=4.0.0
 
 # Linting (optional)
-flake8==6.1.0
+flake8==7.3.0
 black==23.12.0
 
 # Pre-commit hooks (see ./scripts/setup.sh)
