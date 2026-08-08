@@ -1,0 +1,10 @@
+# See https://docs.github.com/articles/about-code-owners
+#
+# Default: single owner for everything. As the team grows, add path-scoped
+# rules below the default (more specific rules further down override it for
+# matching paths), e.g.:
+#   /backend/  @backend-lead
+#   /frontend/ @frontend-lead
+#   /docs/     @anyone
+
+* @An-u-rag
