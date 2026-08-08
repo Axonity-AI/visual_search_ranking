@@ -15,7 +15,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+# requirements.txt pins plain torch==2.1.1, which pulls the default PyPI
+# build -- that build bundles its own CUDA runtime libraries (several GB:
+# nvidia-cublas/cudnn/cufft/etc.) even though this image never uses a GPU.
+# Install the CPU-only build explicitly and exclude torch/torchvision from
+# the general requirements pass, same fix as .github/workflows/ci.yml.
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels \
+        torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+    && grep -v -E '^(torch|torchvision)(==|>=|$)' requirements.txt > requirements-nocuda.txt \
+    && pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements-nocuda.txt
 
 # ============================================================================
 # Stage 2: Runtime stage

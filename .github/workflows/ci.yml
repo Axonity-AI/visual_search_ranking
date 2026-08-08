@@ -52,7 +52,15 @@ jobs:
           python -m pip install --upgrade pip
           # Install CPU-only PyTorch for faster CI
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install -r requirements.txt --no-deps
+          # requirements.txt pins plain torch==2.1.1 (no +cpu suffix), which
+          # pip treats as a *different* version from what was just installed
+          # -- installing it with --no-deps would silently replace the CPU
+          # build with the CUDA build (missing its CUDA-lib dependencies,
+          # since --no-deps skips those too), breaking `import torch` at
+          # runtime. Exclude torch/torchvision from this pass so the CPU
+          # install from above is never touched again.
+          grep -v -E '^(torch|torchvision)(==|>=|$)' requirements.txt > requirements-ci.txt
+          pip install -r requirements-ci.txt --no-deps
           pip install fastapi uvicorn pydantic python-dotenv numpy scikit-learn pillow tqdm requests
           pip install pytest pytest-cov pytest-asyncio flake8
 
@@ -84,6 +92,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Extra headroom on top of the torch CPU-only fix above -- GitHub's
+      # runners ship ~14GB free with a lot of preinstalled tooling this
+      # build never uses (Android SDK, .NET, Haskell, CodeQL).
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          docker system prune -af || true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
